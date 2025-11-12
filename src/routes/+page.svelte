@@ -96,7 +96,13 @@
 			} else {
 				resultUrl += '&'
 			}
-			resultUrl += `${param.key}=${encodeURIComponent(param.value.trim())}`
+            let value = ''
+            try {
+                value = JSON.stringify(JSON.parse(param.value))
+            } catch {
+                value = param.value.trim()
+            }
+			resultUrl += `${param.key}=${encodeURIComponent(value)}`
 		})
 		result = resultUrl
 	}
