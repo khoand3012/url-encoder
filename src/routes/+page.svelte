@@ -3,20 +3,28 @@
 	import { json } from '@codemirror/lang-json'
 	import { EditorState } from '@codemirror/state'
 
-	let url = $state('')
+	type Param = {
+		key: string
+		value: string
+		editor: EditorView | null
+		editorDiv: HTMLElement | null
+	}
 
-	let params = $state([
+	let baseUrl = $state('')
+
+	let params: Param[] = $state([
 		{
 			key: '',
 			value: '',
-			editor: null as EditorView | null,
-			editorDiv: null as HTMLElement | null
+			editor: null,
+			editorDiv: null
 		}
 	])
 
 	let result = $state('')
 	let copyLabel = $state('Copy')
 	let toastMessage = $state('')
+	let orgUrl = $state('')
 
 	const createEditor = (container: HTMLElement, initialValue: string, index: number) => {
 		const state = EditorState.create({
@@ -89,19 +97,19 @@
 	}
 
 	const generateURL = () => {
-		let resultUrl = url
+		let resultUrl = baseUrl
 		params.forEach((param, index) => {
 			if (index === 0) {
 				resultUrl += '?'
 			} else {
 				resultUrl += '&'
 			}
-            let value = ''
-            try {
-                value = JSON.stringify(JSON.parse(param.value))
-            } catch {
-                value = param.value.trim()
-            }
+			let value = ''
+			try {
+				value = JSON.stringify(JSON.parse(param.value))
+			} catch {
+				value = param.value.trim()
+			}
 			resultUrl += `${param.key}=${encodeURIComponent(value)}`
 		})
 		result = resultUrl
@@ -113,6 +121,33 @@
 		setTimeout(() => {
 			copyLabel = 'Copy'
 		}, 3000)
+	}
+
+	const extractURL = () => {
+		if (!orgUrl) return
+		const parsedUrl = new URL(orgUrl)
+		const parsedParams: Param[] = []
+
+		baseUrl = parsedUrl.href.split('?')[0]
+
+		parsedUrl.searchParams.forEach((value, key) => {
+			parsedParams.push({
+				key,
+				value,
+				editor: null,
+				editorDiv: null
+			})
+		})
+
+		if (params.length > 0) {
+			params.forEach((param) => {
+				if (param.editor) param.editor.destroy()
+			})
+		}
+
+		params = parsedParams
+
+		orgUrl = ''
 	}
 
 	// Initialize editors when divs are mounted
@@ -146,6 +181,24 @@
 	<h1 class="mx-auto mb-10 text-3xl font-bold">URL encoding generator</h1>
 	<div class="mx-auto w-full max-w-2xl">
 		<div class="mb-4 rounded bg-white px-8 pt-6 pb-8 shadow-md">
+			<label for="result" class="mb-2 block text-sm font-bold text-gray-700">URL to extract:</label>
+			<div class="grid grid-cols-12 gap-2">
+				<input
+					class="col-span-9 appearance-none rounded border px-3 py-2 text-gray-700 shadow"
+					type="text"
+					name="result"
+					id="result"
+					bind:value={orgUrl}
+				/>
+				<button
+					tabindex="-1"
+					onclick={extractURL}
+					class={`focus:shadow-outline col-span-3 rounded bg-green-500 px-4 py-2 font-bold text-white hover:bg-green-700 focus:outline-none`}
+					>Extract URL</button
+				>
+			</div>
+		</div>
+		<div class="mb-4 rounded bg-white px-8 pt-6 pb-8 shadow-md">
 			<div class="mb-4">
 				<label class="mb-2 block text-sm font-bold text-gray-700" for="url">Base Url</label>
 				<input
@@ -153,7 +206,7 @@
 					type="text"
 					name="url"
 					id="url"
-					bind:value={url}
+					bind:value={baseUrl}
 				/>
 			</div>
 			{#each params as param, index (index)}
