@@ -2,8 +2,10 @@
 	import { EditorView, basicSetup } from 'codemirror'
 	import { json } from '@codemirror/lang-json'
 	import { EditorState } from '@codemirror/state'
+	import { v4 as uuidv4 } from 'uuid'
 
 	type Param = {
+		id: string
 		key: string
 		value: string
 		editor: EditorView | null
@@ -14,6 +16,7 @@
 
 	let params: Param[] = $state([
 		{
+			id: uuidv4(),
 			key: '',
 			value: '',
 			editor: null,
@@ -53,6 +56,7 @@
 
 	const addParam = () => {
 		params.push({
+			id: uuidv4(),
 			key: '',
 			value: '',
 			editor: null,
@@ -132,6 +136,7 @@
 
 		parsedUrl.searchParams.forEach((value, key) => {
 			parsedParams.push({
+				id: uuidv4(),
 				key,
 				value,
 				editor: null,
@@ -209,7 +214,7 @@
 					bind:value={baseUrl}
 				/>
 			</div>
-			{#each params as param, index (index)}
+			{#each params as param, index (param.id)}
 				<div class="mb-4 grid grid-cols-12 gap-2">
 					<div class="col-span-3">
 						<label class="mb-2 block text-sm font-bold text-gray-700" for={`key-${index}`}
