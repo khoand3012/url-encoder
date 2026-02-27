@@ -3,18 +3,11 @@
 	import { json } from '@codemirror/lang-json'
 	import { EditorState } from '@codemirror/state'
 	import { v4 as uuidv4 } from 'uuid'
-
-	type Param = {
-		id: string
-		key: string
-		value: string
-		editor: EditorView | null
-		editorDiv: HTMLElement | null
-	}
+	import Param, { type ParamType } from '$lib/components/Param.svelte'
 
 	let baseUrl = $state('')
 
-	let params: Param[] = $state([
+	let params: ParamType[] = $state([
 		{
 			id: uuidv4(),
 			key: '',
@@ -130,7 +123,7 @@
 	const extractURL = () => {
 		if (!orgUrl) return
 		const parsedUrl = new URL(orgUrl)
-		const parsedParams: Param[] = []
+		const parsedParams: ParamType[] = []
 
 		baseUrl = parsedUrl.href.split('?')[0]
 
@@ -215,44 +208,13 @@
 				/>
 			</div>
 			{#each params as param, index (param.id)}
-				<div class="mb-4 grid grid-cols-12 gap-2">
-					<div class="col-span-3">
-						<label class="mb-2 block text-sm font-bold text-gray-700" for={`key-${index}`}
-							>Key</label
-						>
-						<input
-							class="focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none"
-							type="text"
-							name={`key-${index}`}
-							id={`key-${index}`}
-							value={param.key}
-							onchange={(e) => handleChangeKey(e, index)}
-						/>
-					</div>
-					<div class="col-span-7">
-						<label class="mb-2 block text-sm font-bold text-gray-700" for={`value-${index}`}
-							>Value</label
-						>
-						<div
-							bind:this={param.editorDiv}
-							class="focus:shadow-outline rounded border shadow"
-						></div>
-					</div>
-					<button
-						onclick={() => formatJSON(index)}
-						tabindex="-1"
-						title="Format JSON"
-						class="focus:shadow-outline col-span-1 mt-7 aspect-square rounded bg-purple-500 px-4 py-2 font-bold text-white hover:bg-purple-700 focus:outline-none"
-						>{'{}'}</button
-					>
-					<button
-						onclick={() => removeParam(index)}
-						tabindex="-1"
-						title="Remove Param"
-						class="focus:shadow-outline col-span-1 mt-7 aspect-square rounded bg-red-500 px-4 py-2 font-bold text-white hover:bg-red-700 focus:outline-none"
-						>-</button
-					>
-				</div>
+				<Param
+					{param}
+					{index}
+					onChangeKey={handleChangeKey}
+					onFormatJSON={formatJSON}
+					onRemove={removeParam}
+				/>
 			{/each}
 			<button
 				tabindex="-1"
